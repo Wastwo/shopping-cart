@@ -17,13 +17,17 @@ export const useCartStore = defineStore('cart', () => {
     })
 
     function addItem(product) {
-        const existing = items.value.find((item) => item.id === product.id)
+        const existingIndex = items.value.findIndex((item) => item.id === product.id)
 
-        if (existing) {
-            existing.quantity++
+        if (existingIndex !== -1) {
+            const updatedItems = structuredClone(items)
+            updatedItems[existingIndex].quantity++
+            items.value = updatedItems
         } else {
-            items.value.push({ ...product, quantity: 1 })
+            const clonedProduct = structuredClone(product)
+            items.value = [...items.value, { ...clonedProduct, quantity: 1 }]
         }
+
     }
 
     function removeItem(productId) {
@@ -31,13 +35,14 @@ export const useCartStore = defineStore('cart', () => {
     }
 
     function updateQuantity(productId, quantity) {
-        const item = items.value.find((item) => item.id === productId)
-        if (item) {
-            item.quantity = Math.max(0, quantity)
-            if (item.quantity === 0) {
-                removeItem(productId)
-            }
+        if (quantity <= 0) {
+            removeItem(productId)
+            return
         }
+
+        items.value = items.value.map(item => item.id === productId
+            ? { ...structuredClone(item), quantity }
+            : item)
     }
 
     function clearCart() {
