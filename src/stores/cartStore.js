@@ -1,5 +1,5 @@
 import { defineStore } from "pinia";
-import { ref, computed } from "vue";
+import { ref, computed, toRaw } from "vue";
 
 export const useCartStore = defineStore('cart', () => {
     const items = ref([])
@@ -17,21 +17,21 @@ export const useCartStore = defineStore('cart', () => {
     })
 
     function addItem(product) {
+        const clonedProduct = structuredClone(toRaw(product))
         const existingIndex = items.value.findIndex((item) => item.id === product.id)
 
         if (existingIndex !== -1) {
-            const updatedItems = structuredClone(items)
+            const updatedItems = structuredClone(toRaw(items.value))
             updatedItems[existingIndex].quantity++
             items.value = updatedItems
         } else {
-            const clonedProduct = structuredClone(product)
-            items.value = [...items.value, { ...clonedProduct, quantity: 1 }]
+            items.value = [...toRaw(items.value), { ...clonedProduct, quantity: 1 }]
         }
 
     }
 
     function removeItem(productId) {
-        items.value = items.value.filter((item) => item.id !== productId)
+        items.value = structuredClone(toRaw(items.value)).filter((item) => item.id !== productId)
     }
 
     function updateQuantity(productId, quantity) {
@@ -40,8 +40,8 @@ export const useCartStore = defineStore('cart', () => {
             return
         }
 
-        items.value = items.value.map(item => item.id === productId
-            ? { ...structuredClone(item), quantity }
+        items.value = toRaw(items.value).map(item => item.id === productId
+            ? { ...structuredClone(toRaw(item)), quantity }
             : item)
     }
 
