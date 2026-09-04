@@ -50,7 +50,7 @@ function handleToggleWishlist() {
     <div
         class="group relative flex w-full flex-col overflow-hidden rounded-xl border border-border bg-surface transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1 hover:border-border-hover hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.07)]"
     >
-        <div class="relative aspect-4/3 w-full overflow-hidden bg-surface-muted">
+        <div class="relative aspect-4/3 w-full shrink-0 overflow-hidden bg-surface-muted">
             <slot name="image" :product="product">
                 <img
                     v-if="product.image"
@@ -72,7 +72,7 @@ function handleToggleWishlist() {
             <slot name="badge" :product="product">
                 <span
                     v-if="product.badge"
-                    class="absolute left-2 top-2 sm:left-3 sm:top-3 inline-block rounded-full bg-primary/90 px-2 py-0.5 text-[8px] sm:text-[9px] font-sans font-medium tracking-widest text-surface uppercase backdrop-blur-sm transition-transform duration-300 group-hover:scale-105"
+                    class="absolute left-2 top-2 sm:left-3 sm:top-3 z-10 inline-block rounded-full bg-primary/90 px-2 py-0.5 text-[8px] sm:text-[9px] font-sans font-medium tracking-widest text-surface uppercase backdrop-blur-sm transition-transform duration-300 group-hover:scale-105"
                 >
                     {{ product.badge }}
                 </span>
@@ -81,7 +81,7 @@ function handleToggleWishlist() {
             <button
                 @click="handleToggleWishlist"
                 :aria-label="isInWishlist ? 'Remove from wishlist' : 'Add to wishlist'"
-                class="absolute right-2 top-2 sm:right-3 sm:top-3 flex h-6 w-6 sm:h-8 sm:w-8 items-center justify-center rounded-full bg-surface/80 text-primary shadow-sm backdrop-blur-md transition-all duration-300 hover:bg-surface hover:scale-110 active:scale-90 group-hover:shadow-md"
+                class="absolute right-2 top-2 sm:right-3 sm:top-3 z-10 flex h-6 w-6 sm:h-8 sm:w-8 items-center justify-center rounded-full bg-surface/80 text-primary shadow-sm backdrop-blur-md transition-all duration-300 hover:bg-surface hover:scale-110 active:scale-90 group-hover:shadow-md cursor-pointer"
                 :class="{ 'bg-surface! text-danger!': isInWishlist }"
             >
                 <svg
@@ -100,21 +100,26 @@ function handleToggleWishlist() {
             </button>
         </div>
 
-        <div class="flex flex-1 flex-col p-2.5 sm:p-4">
+        <div class="flex flex-1 flex-col justify-between p-3 sm:p-4 min-w-0">
             <slot name="description" :product="product">
-                <h3 class="mt-0.5 line-clamp-1 font-display text-xs sm:text-sm font-medium leading-snug tracking-tight text-primary transition-colors duration-300 group-hover:text-secondary">
-                    {{ product.name }}
-                </h3>
+                <div class="min-w-0">
+                    <h3
+                        :title="product.name"
+                        class="line-clamp-2 font-display text-xs sm:text-sm font-semibold leading-snug tracking-tight text-primary transition-colors duration-300 group-hover:text-secondary wrap-break-word"
+                    >
+                        {{ product.name }}
+                    </h3>
 
-                <p v-if="product.description" class="mt-1 hidden line-clamp-2 text-xs leading-relaxed text-secondary font-sans font-normal sm:block">
-                    {{ product.description }}
-                </p>
+                    <p v-if="product.description" :title="product.description" class="mt-1 line-clamp-2 font-sans text-[11px] sm:text-xs leading-relaxed text-secondary wrap-break-word">
+                        {{ product.description }}
+                    </p>
+                </div>
             </slot>
 
-            <div class="mt-auto flex items-center justify-between gap-1.5 pt-2 sm:pt-3">
+            <div class="mt-3 flex items-center justify-between gap-2 pt-2 border-t border-border/30">
                 <slot name="price" :product="product">
                     <div class="min-w-0 flex-1">
-                        <span class="block font-display text-xs sm:text-sm font-semibold tracking-tight text-primary tabular-nums truncate"> ${{ product.price.toFixed(2) }} </span>
+                        <span class="block font-display text-xs sm:text-sm font-bold tracking-tight text-primary tabular-nums truncate"> ${{ product.price.toFixed(2) }} </span>
                     </div>
                 </slot>
 
@@ -122,7 +127,7 @@ function handleToggleWishlist() {
                     <button
                         @click="handleAddToCart"
                         :disabled="addedFeedback"
-                        class="shrink-0 inline-flex h-7 sm:h-8 items-center justify-center gap-1 sm:gap-1.5 rounded-full bg-primary px-2 sm:px-3.5 text-[10px] sm:text-xs font-medium font-sans text-surface shadow-xs transition-all duration-300 hover:bg-primary-hover hover:shadow-md active:scale-95 disabled:bg-success disabled:opacity-100 disabled:cursor-default"
+                        class="shrink-0 inline-flex h-7 sm:h-8 items-center justify-center gap-1 sm:gap-1.5 rounded-full bg-primary px-2.5 sm:px-3.5 text-[10px] sm:text-xs font-medium font-sans text-surface shadow-xs transition-all duration-300 hover:bg-primary-hover hover:shadow-md active:scale-95 disabled:bg-success disabled:opacity-100 disabled:cursor-default cursor-pointer"
                         :aria-label="addedFeedback ? 'Added to cart' : 'Add to cart'"
                     >
                         <template v-if="!addedFeedback">
