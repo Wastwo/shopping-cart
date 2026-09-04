@@ -126,7 +126,16 @@ const finalTotal = computed(() => {
                                 <div v-if="promoApplied" class="flex justify-between items-center text-success">
                                     <span class="flex items-center gap-1">
                                         <span>Promo (10% OFF)</span>
-                                        <button @click="handleRemovePromo" class="text-secondary hover:text-danger ml-1">x</button>
+                                        <button
+                                            @click="handleRemovePromo"
+                                            type="button"
+                                            class="inline-flex items-center justify-center text-secondary hover:text-danger transition-colors ml-1.5 p-0.5 rounded-full hover:bg-danger/10 cursor-pointer"
+                                            aria-label="Remove promo code"
+                                        >
+                                            <svg class="h-3.5 w-3.5 stroke-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                            </svg>
+                                        </button>
                                     </span>
                                     <span class="font-display font-semibold tabular-nums">-${{ promoDiscount.toFixed(2) }}</span>
                                 </div>

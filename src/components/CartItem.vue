@@ -92,7 +92,7 @@ function handleRemoveClick() {
         </Transition>
 
         <div class="relative h-20 w-20 sm:h-24 sm:w-24 shrink-0 overflow-hidden rounded-lg bg-surface-muted border border-border/50">
-            <slot name="media" :item="item">
+            <slot name="image" :item="item">
                 <img
                     v-if="item.image"
                     :src="item.image"
@@ -114,7 +114,7 @@ function handleRemoveClick() {
 
         <div class="flex flex-1 flex-col justify-between self-stretch min-w-0 py-0.5">
             <div class="flex items-start justify-between gap-2">
-                <slot name="details" :item="item">
+                <slot name="info" :item="item">
                     <div class="min-w-0 flex-1">
                         <h4 class="font-display text-xs sm:text-sm font-medium leading-snug tracking-tight text-primary truncate group-hover:text-secondary transition-colors duration-300">
                             {{ item.name }}
@@ -177,7 +177,7 @@ function handleRemoveClick() {
                     </div>
                 </slot>
 
-                <slot name="price" :item="item">
+                <slot name="total" :item="item">
                     <span class="font-display text-xs sm:text-sm font-semibold tracking-tight text-primary tabular-nums"> ${{ (item.price * item.quantity).toFixed(2) }} </span>
                 </slot>
             </div>

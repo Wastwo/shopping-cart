@@ -31,7 +31,7 @@ export const useCartStore = defineStore('cart', () => {
     }
 
     function removeItem(productId) {
-        items.value = items.value.filter((item) => item.id !== productId)
+        items.value = structuredClone(toRaw(items.value)).filter((item) => item.id !== productId)
     }
 
     function updateQuantity(productId, quantity) {
