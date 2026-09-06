@@ -1,4 +1,4 @@
-import { watch, onUnmounted } from "vue";
+import { watch, onScopeDispose } from "vue";
 
 const CART_STORAGE_KEY = 'shopping-cart'
 const CART_SCHEMA_VERSION = 3
@@ -7,10 +7,7 @@ function debounce(fn, delay) {
     let timeoutId = null
 
     const debounced = (...args) => {
-        if (timeoutId !== null) {
-            clearTimeout(timeoutId)
-        }
-
+        if (timeoutId !== null) clearTimeout(timeoutId)
         timeoutId = setTimeout(() => {
             fn(...args)
             timeoutId = null
@@ -40,7 +37,6 @@ function deepEqual(a, b) {
         if (!keysB.includes(key)) return false
         if (!deepEqual(a[key], b[key])) return false
     }
-
     return true
 }
 
@@ -65,24 +61,17 @@ function migrateData(data) {
                 details: item.details || {}
             }))
         }
-
         return []
     }
 
     let items = data.items || []
 
     if (data.version < 2) {
-        items = items.map(item => ({
-            ...item,
-            category: item.category || 'uncategorized'
-        }))
+        items = items.map(item => ({ ...item, category: item.category || 'uncategorized' }))
     }
 
     if (data.version < 3) {
-        items = items.map(item => ({
-            ...item,
-            details: item.details || {}
-        }))
+        items = items.map(item => ({ ...item, details: item.details || {} }))
     }
 
     return items.filter(isValidCartItem)
@@ -90,16 +79,12 @@ function migrateData(data) {
 
 export function useCartPersistence(itemsRef, options = {}) {
     const { debounceMs = 300, crossTabSync = true } = options
-
     let lastPersistedState = null
 
     function persist() {
         try {
             const items = itemsRef.value
-
-            if (lastPersistedState && deepEqual(items, lastPersistedState)) {
-                return
-            }
+            if (lastPersistedState && deepEqual(items, lastPersistedState)) return
 
             const data = {
                 version: CART_SCHEMA_VERSION,
@@ -117,13 +102,11 @@ export function useCartPersistence(itemsRef, options = {}) {
     function restore() {
         try {
             const raw = localStorage.getItem(CART_STORAGE_KEY)
-
             if (!raw) return []
 
             const data = JSON.parse(raw)
             const items = migrateData(data)
             lastPersistedState = structuredClone(items)
-
             return items
         } catch (error) {
             console.error('[CartPersistence] Failed to restore:', error)
@@ -142,13 +125,10 @@ export function useCartPersistence(itemsRef, options = {}) {
 
     const debouncedPersist = debounce(persist, debounceMs)
 
-    const stopWatch = watch(
-        itemsRef,
-        () => debouncedPersist(),
-        { deep: true }
-    )
+    const stopWatch = watch(itemsRef, () => debouncedPersist(), { deep: true })
 
     let cleanupStorageListener = null
+
     if (crossTabSync) {
         function handleStorage(event) {
             if (event.key !== CART_STORAGE_KEY) return
@@ -171,18 +151,18 @@ export function useCartPersistence(itemsRef, options = {}) {
 
         window.addEventListener('storage', handleStorage)
         cleanupStorageListener = () => window.removeEventListener('storage', handleStorage)
+    }
 
-        onUnmounted(() => {
-            stopWatch()
-            debouncedPersist.cancel()
-            if (cleanupStorageListener) cleanupStorageListener()
-        })
+    onScopeDispose(() => {
+        stopWatch()
+        debouncedPersist.cancel()
+        if (cleanupStorageListener) cleanupStorageListener()
+    })
 
-        return {
-            persist,
-            restore,
-            clear,
-            debouncedPersist
-        }
+    return {
+        persist,
+        restore,
+        clear,
+        debouncedPersist
     }
 }
