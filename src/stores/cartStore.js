@@ -1,8 +1,17 @@
 import { defineStore } from "pinia";
 import { ref, computed, toRaw } from "vue";
+import { useCartPersistence } from "@/composables/useCartPersistence";
 
 export const useCartStore = defineStore('cart', () => {
     const items = ref([])
+    const isBatching = ref(false)
+
+    const { persist, restore, clear, debouncedPersist } = useCartPersistence(items, {
+        debounceMs: 300,
+        crossTabSync: true
+    })
+
+    items.value = restore()
 
     const totalItems = computed(() => {
         return items.value.reduce((sum, item) => sum + item.quantity, 0)
@@ -27,7 +36,6 @@ export const useCartStore = defineStore('cart', () => {
         } else {
             items.value = [...toRaw(items.value), { ...clonedProduct, quantity: 1 }]
         }
-
     }
 
     function removeItem(productId) {
@@ -42,11 +50,24 @@ export const useCartStore = defineStore('cart', () => {
 
         items.value = toRaw(items.value).map(item => item.id === productId
             ? { ...structuredClone(toRaw(item)), quantity }
-            : item)
+            : item
+        )
     }
 
     function clearCart() {
         items.value = []
+        clear()
+    }
+
+    function batchUpdate(callback) {
+        isBatching.value = true
+        try {
+            callback()
+        } finally {
+            isBatching.value = false
+            debouncedPersist.cancel()
+            persist()
+        }
     }
 
     return {
@@ -54,9 +75,11 @@ export const useCartStore = defineStore('cart', () => {
         totalItems,
         totalPrice,
         isEmpty,
+        isBatching,
         addItem,
         removeItem,
         updateQuantity,
         clearCart,
+        batchUpdate,
     }
 })
