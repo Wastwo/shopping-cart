@@ -1,8 +1,39 @@
 <script setup>
+/**
+ * @component ProductCard
+ * @description Displays a product in a card layout with image, name, description,
+ * price, wishlist toggle, and add-to-cart button.
+ *
+ * Design decisions:
+ * - Uses `ref` for `addedFeedback` because it's a temporary UI state (1.5s timeout)
+ *   that's set imperatively. It's not derived from other state, so `computed` would
+ *   be inappropriate. A `ref` allows simple boolean toggling with `setTimeout`.
+ * - Uses `computed` for `isInWishlist` because it's derived from the wishlist store's
+ *   state. The value automatically updates when the store changes, eliminating the
+ *   need for manual synchronization or watchers.
+ * - The 1.5s feedback timeout provides visual confirmation without blocking the UI.
+ *   Using `setTimeout` instead of a reactive timer keeps the logic simple and avoids
+ *   unnecessary re-renders.
+ * - Props are validated to ensure required fields (id, name, price) are present.
+ *
+ * @example
+ * <ProductCard :product="{ id: 1, name: 'Headphones', price: 249 }" />
+ */
 import { ref, computed } from 'vue';
 import { useCartStore } from '@/stores/cartStore';
 import { useWishlistStore } from '@/stores/wishlistStore';
 
+/**
+ * Component props.
+ *
+ * @property {Object} product - The product to display.
+ * @property {number} product.id - Unique product identifier.
+ * @property {string} product.name - Product display name.
+ * @property {number} product.price - Product price.
+ * @property {string} [product.image] - Optional product image URL.
+ * @property {string} [product.description] - Optional product description.
+ * @property {string} [product.badge] - Optional badge text (e.g., "NEW", "SALE").
+ */
 const props = defineProps({
     product: {
         type: Object,
@@ -13,6 +44,17 @@ const props = defineProps({
     },
 });
 
+/**
+ * Component events.
+ *
+ * @event add-to-cart Emitted when the product is added to the cart.
+ * @event add-to-cart.payload {Object} - Contains product identification.
+ * @event add-to-cart.payload.id {number} - Product ID.
+ * @event add-to-cart.payload.name {string} - Product name.
+ *
+ * @event toggle-wishlist Emitted when the wishlist status is toggled.
+ * @event toggle-wishlist.productId {number} - Product ID being toggled.
+ */
 const emit = defineEmits({
     'add-to-cart': payload => {
         if (payload && typeof payload.id === 'number') {
@@ -27,9 +69,38 @@ const emit = defineEmits({
 
 const cart = useCartStore();
 const wishlist = useWishlistStore();
+
+/**
+ * Temporary UI state for the "Added to cart" feedback animation.
+ *
+ * WHY ref over computed: This is imperative state set by a user action (click)
+ * and cleared by a timer. It's not derived from any reactive source. Using
+ * `computed` would require a writable computed with a setter, which is overkill
+ * for a simple boolean flag. The 1.5s timeout provides visual confirmation without
+ * blocking the UI or requiring complex state management.
+ *
+ * @type {import('vue').Ref<boolean>}
+ */
 const addedFeedback = ref(false);
+
+/**
+ * Whether the product is currently in the wishlist.
+ *
+ * WHY computed over ref: This value is derived from the wishlist store's state.
+ * Using `computed` ensures it automatically updates when the store changes (e.g.,
+ * when the user toggles the wishlist from another component). If we used a `ref`,
+ * we'd need to manually sync it with a watcher or re-compute it on every store
+ * change, which is error-prone and verbose.
+ *
+ * @type {import('vue').ComputedRef<boolean>}
+ */
 const isInWishlist = computed(() => wishlist.isInWishlist(props.product.id));
 
+/**
+ * Adds the product to the cart and shows a 1.5s confirmation animation.
+ *
+ * @returns {void}
+ */
 function handleAddToCart() {
     cart.addItem(props.product);
     emit('add-to-cart', { id: props.product.id, name: props.product.name });
@@ -40,6 +111,11 @@ function handleAddToCart() {
     }, 1500);
 }
 
+/**
+ * Toggles the product's wishlist status.
+ *
+ * @returns {void}
+ */
 function handleToggleWishlist() {
     wishlist.toggleWishlist(props.product.id);
     emit('toggle-wishlist', props.product.id);

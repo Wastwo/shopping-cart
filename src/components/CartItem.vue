@@ -1,7 +1,34 @@
 <script setup>
+/**
+ * @component CartItem
+ * @description Displays a single cart line-item with quantity controls, image,
+ * pricing, and a two-step delete confirmation flow.
+ *
+ * Design decisions:
+ * - Uses `ref` for `isConfirmingDelete` because it's local UI state that doesn't
+ *   need to be shared or persisted. Computed would be inappropriate here since
+ *   the value is set imperatively by user actions, not derived from other state.
+ * - Props are validated at runtime to catch misuse during development.
+ * - Emits use validator functions to enforce payload contracts.
+ * - The delete confirmation uses a two-step pattern (click X → confirm dialog)
+ *   to prevent accidental removals, which is critical for e-commerce UX.
+ *
+ * @example
+ * <CartItem :item="{ id: 1, name: 'Headphones', price: 249, quantity: 2 }" />
+ */
 import { useCartStore } from '@/stores/cartStore';
 import { ref } from 'vue';
 
+/**
+ * Component props.
+ *
+ * @property {Object} item - The cart line-item to display.
+ * @property {number} item.id - Unique product identifier.
+ * @property {string} item.name - Product display name.
+ * @property {number} item.price - Unit price of the product.
+ * @property {number} item.quantity - Current quantity in cart (must be > 0).
+ * @property {string} [item.image] - Optional product image URL.
+ */
 const props = defineProps({
     item: {
         type: Object,
@@ -12,6 +39,17 @@ const props = defineProps({
     },
 });
 
+/**
+ * Component events.
+ *
+ * @event quantity-change Emitted when the item quantity is incremented or decremented.
+ * @event quantity-change.payload {Object} - Contains the updated quantity info.
+ * @event quantity-change.payload.id {number} - Product ID.
+ * @event quantity-change.payload.quantity {number} - New quantity value (>= 0).
+ *
+ * @event remove Emitted when the item is confirmed for removal.
+ * @event remove.id {number} - Product ID being removed.
+ */
 const emit = defineEmits({
     'quantity-change': payload => {
         return payload.id && typeof payload.quantity === 'number' && payload.quantity >= 0;
@@ -20,14 +58,40 @@ const emit = defineEmits({
 });
 
 const cartStore = useCartStore();
+
+/**
+ * Local UI state for the delete confirmation dialog.
+ *
+ * WHY ref over computed: This is imperative state toggled by user interactions
+ * (clicking remove button, cancel, or confirm). It's not derived from any other
+ * reactive source, so `ref` is the correct choice. Using `computed` would require
+ * a writable computed with a setter, which adds unnecessary complexity for simple
+ * boolean toggling.
+ *
+ * @type {import('vue').Ref<boolean>}
+ */
 const isConfirmingDelete = ref(false);
 
+/**
+ * Increments the item quantity by 1 and emits the change event.
+ *
+ * @returns {void}
+ */
 function handleIncrement() {
     const newQty = props.item.quantity + 1;
     cartStore.updateQuantity(props.item.id, newQty);
     emit('quantity-change', { id: props.item.id, quantity: newQty });
 }
 
+/**
+ * Decrements the item quantity by 1, or triggers delete confirmation if quantity is 1.
+ *
+ * Edge case: When quantity is 1, decrementing would result in 0, which is invalid.
+ * Instead of allowing this, we show a confirmation dialog asking the user if they
+ * want to remove the item entirely. This prevents accidental data loss.
+ *
+ * @returns {void}
+ */
 function handleDecrement() {
     if (props.item.quantity <= 1) {
         isConfirmingDelete.value = true;
@@ -39,16 +103,31 @@ function handleDecrement() {
     emit('quantity-change', { id: props.item.id, quantity: newQty });
 }
 
+/**
+ * Cancels the delete confirmation and hides the dialog.
+ *
+ * @returns {void}
+ */
 function handleCancelDelete() {
     isConfirmingDelete.value = false;
 }
 
+/**
+ * Confirms item deletion, removes it from the cart, and emits the remove event.
+ *
+ * @returns {void}
+ */
 function handleConfirmDelete() {
     cartStore.removeItem(props.item.id);
     emit('remove', props.item.id);
     isConfirmingDelete.value = false;
 }
 
+/**
+ * Opens the delete confirmation dialog (triggered by clicking the X button).
+ *
+ * @returns {void}
+ */
 function handleRemoveClick() {
     isConfirmingDelete.value = true;
 }

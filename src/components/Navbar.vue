@@ -1,5 +1,25 @@
 <!-- eslint-disable vue/multi-word-component-names -->
 <script setup>
+/**
+ * @component Navbar
+ * @description Global navigation bar with links to Products, Wishlist, and Cart pages.
+ *
+ * Displays real-time badge counts for wishlist and cart items, pulled directly
+ * from their respective Pinia stores. The badges use Vue's `<Transition>` component
+ * for smooth scale/fade animations when counts change.
+ *
+ * Design decisions:
+ * - No props or emits: This is a top-level layout component that reads directly
+ *   from stores. It doesn't need to be configurable or communicate upward.
+ * - Uses `storeToRefs` pattern implicitly by accessing store properties directly.
+ *   Since we're only reading (not destructuring reactive state for reassignment),
+ *   direct access is cleaner and avoids unnecessary ref unwrapping.
+ * - Badge counts use optional chaining (`?.totalItems`) to guard against store
+ *   initialization edge cases during SSR or testing.
+ *
+ * @example
+ * <Navbar />
+ */
 import { RouterLink } from 'vue-router';
 import { useCartStore } from '@/stores/cartStore';
 import { useWishlistStore } from '@/stores/wishlistStore';

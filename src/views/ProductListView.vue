@@ -1,13 +1,54 @@
 <script setup>
+/**
+ * @component ProductListView
+ * @description Product listing page with category filters, search input, sort
+ * dropdown, and a responsive grid of product cards.
+ *
+ * Design decisions:
+ * - Uses `storeToRefs` to destructure reactive state from the product store.
+ *   This preserves reactivity when accessing store properties in the template.
+ * - Uses `computed` for `categoryOptions` because it's derived from the store's
+ *   `categories` array. Computed properties automatically update when dependencies
+ *   change and are cached for performance.
+ * - The search input binds to `rawSearchQuery` (store state), which is debounced
+ *   in the store before filtering. This separates the UI input from the filtering
+ *   logic, preventing excessive re-computations on every keystroke.
+ * - Empty state shows a "Reset All Filters" button to help users recover from
+ *   overly restrictive filters.
+ *
+ * @example
+ * <!-- Used by Vue Router at /products -->
+ * <ProductListView />
+ */
 import { computed } from 'vue';
 import { useProductStore } from '@/stores/productStore.js';
 import ProductCard from '@/components/ProductCard.vue';
 import { storeToRefs } from 'pinia';
 
 const productStore = useProductStore();
+
+/**
+ * Destructure reactive state from the product store.
+ *
+ * WHY storeToRefs: Pinia stores are reactive objects, but destructuring them
+ * directly (e.g., `const { products } = productStore`) loses reactivity.
+ * `storeToRefs` wraps each property in a `ref` or `computed`, preserving the
+ * reactive link. This allows the template to access these values and have them
+ * update automatically when the store changes.
+ */
 const { products, rawSearchQuery, selectedCategory, sortBy, categories, filteredProducts } = storeToRefs(productStore);
 const { resetFilters } = productStore;
 
+/**
+ * Category filter options including "all" as the default.
+ *
+ * WHY computed: This is derived from the store's `categories` array. Using
+ * `computed` ensures it automatically updates if the store's categories change
+ * (e.g., if products are added dynamically). It also caches the result until
+ * dependencies update, avoiding unnecessary re-computations.
+ *
+ * @type {import('vue').ComputedRef<string[]>}
+ */
 const categoryOptions = computed(() => {
     return ['all', ...categories.value];
 });

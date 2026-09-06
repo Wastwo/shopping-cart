@@ -1,4 +1,26 @@
 <script setup>
+/**
+ * @component WishlistView
+ * @description Displays the user's saved wishlist items in a responsive grid
+ * of product cards.
+ *
+ * Design decisions:
+ * - Uses `storeToRefs` to destructure reactive state from both the wishlist and
+ *   product stores. This preserves reactivity when accessing store properties.
+ * - Uses `computed` for `wishlistProducts` because it's derived from two reactive
+ *   sources: the wishlist store's IDs and the product store's catalogue. Computed
+ *   properties automatically update when either source changes and cache results
+ *   for performance.
+ * - Uses `computed` for `isEmpty` because it's derived from `wishlistProducts`.
+ *   This avoids redundant template logic and makes the empty-state check reusable.
+ * - Joins wishlist IDs with product data to get full product objects for rendering.
+ *   This pattern keeps the wishlist store lightweight (only IDs) while allowing
+ *   the view to access complete product information.
+ *
+ * @example
+ * <!-- Used by Vue Router at /wishlist -->
+ * <WishlistView />
+ */
 import { computed } from 'vue';
 import { storeToRefs } from 'pinia';
 import { useWishlistStore } from '@/stores/wishlistStore';
@@ -8,13 +30,41 @@ import ProductCard from '@/components/ProductCard.vue';
 const wishlistStore = useWishlistStore();
 const productStore = useProductStore();
 
+/**
+ * Destructure reactive state from the wishlist store.
+ *
+ * WHY storeToRefs: Preserves reactivity when destructuring. Without it,
+ * `const { wishlistIds } = wishlistStore` would give a plain Set, not a ref.
+ */
 const { wishlistIds, totalItems } = storeToRefs(wishlistStore);
 const { clearWishlist } = wishlistStore;
 
+/**
+ * Full product objects for all wishlisted items.
+ *
+ * WHY computed: This is derived from two reactive sources:
+ * 1. `wishlistIds` (Set of product IDs from wishlist store)
+ * 2. `productStore.products` (array of all products)
+ *
+ * Using `computed` ensures it automatically updates when either source changes
+ * (e.g., when a product is added/removed from wishlist, or when the product
+ * catalogue updates). It also caches the result until dependencies change,
+ * avoiding unnecessary re-computations on every render.
+ *
+ * If we used a `ref`, we'd need a watcher to manually sync the two sources,
+ * which is verbose and error-prone.
+ *
+ * @type {import('vue').ComputedRef<Array<Object>>}
+ */
 const wishlistProducts = computed(() => {
     return productStore.products.filter(product => wishlistIds.value.has(product.id));
 });
 
+/**
+ * Whether the wishlist is empty (no products saved).
+ *
+ * @type {import('vue').ComputedRef<boolean>}
+ */
 const isEmpty = computed(() => wishlistProducts.value.length === 0);
 </script>
 
