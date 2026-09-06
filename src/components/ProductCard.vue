@@ -14,7 +14,7 @@ const props = defineProps({
 });
 
 const emit = defineEmits({
-    'add-to-card': payload => {
+    'add-to-cart': payload => {
         if (payload && typeof payload.id === 'number') {
             return true;
         }
@@ -32,7 +32,7 @@ const isInWishlist = computed(() => wishlist.isInWishlist(props.product.id));
 
 function handleAddToCart() {
     cart.addItem(props.product);
-    emit('add-to-card', { id: props.product.id, name: props.product.name });
+    emit('add-to-cart', { id: props.product.id, name: props.product.name });
 
     addedFeedback.value = true;
     setTimeout(() => {
