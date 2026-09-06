@@ -93,7 +93,12 @@ const finalTotal = computed(() => {
 
                         <div class="flex items-center justify-between pt-2">
                             <h2 class="font-display text-xs font-bold tracking-[0.2em] uppercase text-secondary">Archive Items</h2>
-                            <button @click="clearCart" type="button" class="text-[11px] font-sans font-medium text-secondary hover:text-danger transition-colors duration-200 cursor-pointer">
+                            <button
+                                @click="clearCart"
+                                :disabled="cartStore.isBatching"
+                                type="button"
+                                class="text-[11px] font-sans font-medium text-secondary hover:text-danger disabled:opacity-50 transition-colors duration-200 cursor-pointer"
+                            >
                                 Clear All
                             </button>
                         </div>
