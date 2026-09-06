@@ -1,4 +1,4 @@
-import { watch, onScopeDispose } from "vue";
+import { watch, onScopeDispose, toRaw } from "vue";
 
 const CART_STORAGE_KEY = 'shopping-cart'
 const CART_SCHEMA_VERSION = 3
@@ -83,7 +83,7 @@ export function useCartPersistence(itemsRef, options = {}) {
 
     function persist() {
         try {
-            const items = itemsRef.value
+            const items = toRaw(itemsRef.value)
             if (lastPersistedState && deepEqual(items, lastPersistedState)) return
 
             const data = {

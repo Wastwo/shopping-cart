@@ -13,7 +13,7 @@ const wishlistStore = useWishlistStore();
         <div class="mx-auto max-w-7xl px-3.5 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between gap-2">
                 <RouterLink
-                    to="/"
+                    to="/products"
                     class="font-display text-[11px] sm:text-xs md:text-sm font-bold tracking-[0.2em] sm:tracking-[0.28em] truncate uppercase text-primary transition-colors duration-300 hover:text-secondary shrink-0"
                 >
                     ESSENTIALS

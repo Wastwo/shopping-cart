@@ -241,7 +241,7 @@ const finalTotal = computed(() => {
                     </p>
 
                     <router-link
-                        to="/"
+                        to="/products"
                         class="group relative mt-8 inline-flex items-center gap-2.5 rounded-full border border-primary bg-primary px-6 py-2.5 font-sans text-[11px] font-semibold tracking-[0.18em] uppercase text-surface transition-all duration-300 hover:bg-transparent hover:text-primary active:scale-95 cursor-pointer"
                     >
                         <span>Explore Collection</span>
