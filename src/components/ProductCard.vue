@@ -14,7 +14,7 @@ const props = defineProps({
 });
 
 const emit = defineEmits({
-    'add-to-card': payload => {
+    'add-to-cart': payload => {
         if (payload && typeof payload.id === 'number') {
             return true;
         }
@@ -32,7 +32,7 @@ const isInWishlist = computed(() => wishlist.isInWishlist(props.product.id));
 
 function handleAddToCart() {
     cart.addItem(props.product);
-    emit('add-to-card', { id: props.product.id, name: props.product.name });
+    emit('add-to-cart', { id: props.product.id, name: props.product.name });
 
     addedFeedback.value = true;
     setTimeout(() => {
@@ -126,7 +126,7 @@ function handleToggleWishlist() {
                 <slot name="actions" :product="product" :added-feedback="addedFeedback" :handle-add-to-cart="handleAddToCart">
                     <button
                         @click="handleAddToCart"
-                        :disabled="addedFeedback"
+                        :disabled="addedFeedback || cart.isBatching"
                         class="shrink-0 inline-flex h-7 sm:h-8 items-center justify-center gap-1 sm:gap-1.5 rounded-full bg-primary px-2.5 sm:px-3.5 text-[10px] sm:text-xs font-medium font-sans text-surface shadow-xs transition-all duration-300 hover:bg-primary-hover hover:shadow-md active:scale-95 disabled:bg-success disabled:opacity-100 disabled:cursor-default cursor-pointer"
                         :aria-label="addedFeedback ? 'Added to cart' : 'Add to cart'"
                     >
