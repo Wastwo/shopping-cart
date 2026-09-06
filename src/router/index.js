@@ -1,23 +1,49 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import HomeView from '../views/HomeView.vue'
 
 const router = createRouter({
-  history: createWebHistory(import.meta.env.BASE_URL),
-  routes: [
-    {
-      path: '/',
-      name: 'home',
-      component: HomeView,
-    },
-    {
-      path: '/about',
-      name: 'about',
-      // route level code-splitting
-      // this generates a separate chunk (About.[hash].js) for this route
-      // which is lazy-loaded when the route is visited.
-      component: () => import('../views/AboutView.vue'),
-    },
-  ],
+    history: createWebHistory(import.meta.env.BASE_URL),
+    routes: [
+        {
+            path: '/',
+            redirect: '/products'
+        },
+        {
+            path: '/products',
+            name: 'products',
+            component: () => import('../views/ProductListView.vue'),
+            meta: {
+                title: 'All Products'
+            }
+        },
+        {
+            path: '/cart',
+            name: 'cart',
+            component: () => import('../views/CartView.vue'),
+            meta: {
+                title: 'Shopping Bag'
+            }
+        },
+        {
+            path: '/wishlist',
+            name: 'wishlist',
+            component: () => import('../views/WishlistView.vue'),
+            meta: {
+                title: 'My Wishlist'
+            }
+        },
+    ],
+    scrollBehavior(to, from, savedPosition) {
+        if (savedPosition) {
+            return savedPosition;
+        }
+        return { top: 0 };
+    }
+})
+
+router.afterEach((to) => {
+    const baseTitle = 'Essentials';
+    const pageTitle = to.meta.title;
+    document.title = pageTitle ? `${pageTitle} — ${baseTitle}` : baseTitle;
 })
 
 export default router

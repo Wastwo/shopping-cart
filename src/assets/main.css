@@ -1,1 +1,28 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Manrope:wght@200..800&display=swap');
 @import 'tailwindcss';
+
+@theme {
+    --font-display: 'Manrope', sans-serif;
+    --font-sans: 'Inter', sans-serif;
+    --color-primary: #09090b;
+    --color-primary-hover: #27272a;
+    --color-secondary: #52525b;
+    --color-surface: #ffffff;
+    --color-surface-muted: #f4f4f5;
+    --color-border: #e4e4e7;
+    --color-border-hover: #d4d4d8;
+    --color-success: #15803d;
+    --color-danger: #e11d48;
+}
+
+body {
+    margin: 0;
+    font-family:
+        'Inter',
+        system-ui,
+        -apple-system,
+        sans-serif;
+    background-color: #fafafa;
+    color: #09090b;
+    -webkit-font-smoothing: antialiased;
+}
