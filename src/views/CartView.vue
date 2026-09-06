@@ -1,28 +1,127 @@
 <script setup>
+/**
+ * @component CartView
+ * @description Shopping cart page displaying all cart items, shipping progress,
+ * promo code input, and order summary with totals.
+ *
+ * Design decisions:
+ * - Uses `storeToRefs` to destructure reactive state from the cart store. This
+ *   preserves reactivity when accessing store properties in the template. Without
+ *   `storeToRefs`, destructuring would lose reactivity (e.g., `const { items } = cartStore`
+ *   would give a plain value, not a ref).
+ * - Uses `ref` for promo-related state (`promoCode`, `promoApplied`, `promoDiscount`,
+ *   `promoError`) because these are local to this view and not shared across components.
+ *   They're set imperatively by user actions (typing, clicking Apply), not derived
+ *   from other state.
+ * - Uses `computed` for derived values (`shippingProgress`, `amountToFreeShipping`,
+ *   `shippingFee`, `finalTotal`) because they're calculated from other reactive values.
+ *   Computed properties automatically update when dependencies change and are cached
+ *   for performance.
+ * - The free shipping threshold is a constant because it's a business rule that
+ *   doesn't change at runtime.
+ *
+ * @example
+ * <!-- Used by Vue Router at /cart -->
+ * <CartView />
+ */
 import { computed, ref } from 'vue';
 import { storeToRefs } from 'pinia';
 import { useCartStore } from '@/stores/cartStore';
 import CartItem from '@/components/CartItem.vue';
 
 const cartStore = useCartStore();
+
+/**
+ * Destructure reactive state from the cart store.
+ *
+ * WHY storeToRefs: Pinia stores are reactive objects, but destructuring them
+ * directly (e.g., `const { items } = cartStore`) loses reactivity because you're
+ * extracting plain values. `storeToRefs` wraps each property in a `ref` or
+ * `computed`, preserving the reactive link to the store. This allows the template
+ * to access `items.value` and have it update automatically when the store changes.
+ */
 const { items, totalItems, totalPrice, isEmpty } = storeToRefs(cartStore);
 const { clearCart } = cartStore;
 
+/**
+ * Minimum cart total to qualify for free shipping.
+ *
+ * @constant {number}
+ */
 const FREE_SHIPPING_THRESHOLD = 300;
 
+/**
+ * Progress toward free shipping as a percentage (0-100).
+ *
+ * WHY computed: This is derived from `totalPrice` (a reactive store value). Using
+ * `computed` ensures it automatically recalculates when the cart total changes and
+ * caches the result until dependencies update. A `ref` would require manual updates
+ * via a watcher, which is verbose and error-prone.
+ *
+ * @type {import('vue').ComputedRef<number>}
+ */
 const shippingProgress = computed(() => {
     return Math.min(100, (totalPrice.value / FREE_SHIPPING_THRESHOLD) * 100);
 });
+
+/**
+ * Remaining amount needed to reach free shipping.
+ *
+ * @type {import('vue').ComputedRef<number>}
+ */
 const amountToFreeShipping = computed(() => {
     return Math.max(0, FREE_SHIPPING_THRESHOLD - totalPrice.value);
 });
 
+/**
+ * User-entered promo code (bound to the input field).
+ *
+ * WHY ref: This is local form state set by user input. It's not derived from
+ * other reactive values, so `computed` would be inappropriate.
+ *
+ * @type {import('vue').Ref<string>}
+ */
 const promoCode = ref('');
+
+/**
+ * Whether a promo code has been successfully applied.
+ *
+ * @type {import('vue').Ref<boolean>}
+ */
 const promoApplied = ref(false);
+
+/**
+ * Discount amount from the applied promo code.
+ *
+ * @type {import('vue').Ref<number>}
+ */
 const promoDiscount = ref(0);
+
+/**
+ * Error message for invalid promo codes.
+ *
+ * @type {import('vue').Ref<string>}
+ */
 const promoError = ref('');
+
+/**
+ * Base shipping fee when free shipping is not qualified.
+ *
+ * WHY ref: This is a constant value in the current implementation, but using `ref`
+ * allows it to be changed dynamically in the future (e.g., based on region or
+ * shipping method) without refactoring the component.
+ *
+ * @type {import('vue').Ref<number>}
+ */
 const baseShippingFee = ref(20);
 
+/**
+ * Validates and applies the entered promo code.
+ *
+ * Currently supports a single hardcoded code: "ESSENTIALS10" (10% discount).
+ *
+ * @returns {void}
+ */
 function handleApplyPromo() {
     promoError.value = '';
     if (promoCode.value.trim().toUpperCase() === 'ESSENTIALS10') {
@@ -35,6 +134,11 @@ function handleApplyPromo() {
     }
 }
 
+/**
+ * Removes the applied promo code and resets related state.
+ *
+ * @returns {void}
+ */
 function handleRemovePromo() {
     promoApplied.value = false;
     promoDiscount.value = 0;
@@ -42,10 +146,23 @@ function handleRemovePromo() {
     promoError.value = '';
 }
 
+/**
+ * Actual shipping fee (0 if free shipping is qualified, otherwise base fee).
+ *
+ * @type {import('vue').ComputedRef<number>}
+ */
 const shippingFee = computed(() => {
     return amountToFreeShipping.value === 0 ? 0 : baseShippingFee.value;
 });
 
+/**
+ * Final order total after shipping and promo discount.
+ *
+ * Uses `Math.max(0, ...)` to prevent negative totals if the discount exceeds
+ * the subtotal (edge case protection).
+ *
+ * @type {import('vue').ComputedRef<number>}
+ */
 const finalTotal = computed(() => {
     return Math.max(0, totalPrice.value + shippingFee.value - promoDiscount.value);
 });
